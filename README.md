@@ -10,7 +10,7 @@ When it's activated, it automatically shows Tracy bar and displays within global
 3. Profit!
 4. You can optionally define PHP boolean constant WP_TRACY_CHECK_USER_LOGGED_IN...
 
-![Tracy bar auto-display after plugin activation](/assests/screenshot-1.png?raw=true)
+![Tracy bar auto-display after plugin activation](https://ktstudio.github.io/images/wp-tracy.png)
 
 ---
 
