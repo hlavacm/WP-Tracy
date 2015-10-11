@@ -1,0 +1,24 @@
+{
+    "name": "ktstudio/wp-tracy",
+    "description": "(Nette) Tracy connector for WordPress",
+    "keywords": ["tracy", "debugger", "wordpress"],
+    "homepage": "https://github.com/ktstudio/wp-tracy",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Martin Hlaváč",
+            "email": "hlavac@ktstudio.cz",
+            "homepage": "http://www.ktstudio.cz/",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "tracy/tracy": "~2.3"
+    },
+    "autoload": {
+        "classmap": ["src/panels"],
+        "files": ["src/index.php"]
+    },
+    "minimum-stability": "dev"
+}
