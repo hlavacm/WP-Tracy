@@ -30,7 +30,6 @@ class WpUserPanel extends WpPanelBase {
                         __("Display Name") => $currentUser->display_name,
                         __("First Name") => $currentUser->first_name,
                         __("Last Name") => $currentUser->last_name,
-                        __("Nice Name") => $currentUser->nice_name,
                         __("Roles") => Debugger::dump($currentUser->roles, true),
                         __("Allcaps") => Debugger::dump($currentUser->allcaps, true),
             ));
