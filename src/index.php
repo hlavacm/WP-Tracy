@@ -1,5 +1,9 @@
 <?php
 
+if (defined("DOING_AJAX") && DOING_AJAX) {
+    return; // for IE compatibility WordPress media upload
+}
+
 if (defined("WP_TRACY_CHECK_USER_LOGGED_IN") && WP_TRACY_CHECK_USER_LOGGED_IN && is_user_logged_in()) {
     return; // cancel for anonymous users
 }
