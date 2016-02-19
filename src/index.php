@@ -16,6 +16,7 @@ $panels = array(
     "WpTracy\\WpUserPanel",
     "WpTracy\\WpPostPanel",
     "WpTracy\\WpQueryPanel",
+    "WpTracy\\WpQueriedObjectPanel",
     "WpTracy\\WpDbPanel",
     "WpTracy\\WpRewritePanel",
 );
