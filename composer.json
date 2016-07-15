@@ -13,8 +13,8 @@
         }
     ],
     "require": {
-        "php": ">=5.4.0",
-        "tracy/tracy": "~2.3"
+        "php": ">=5.4.4",
+        "tracy/tracy": "~2.4"
     },
     "autoload": {
         "classmap": ["src/panels"],
