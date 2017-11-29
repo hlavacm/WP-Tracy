@@ -21,8 +21,32 @@ if (function_exists('add_action')) {
         $options['tracyDebugger_checkbox_showBar'] = 0;
         $changes = true;
     }
+    if (!isset($options['tracyDebugger_checkbox_scream'])) {
+        $options['tracyDebugger_checkbox_scream'] = 0;
+        $changes = true;
+    }
     if (!isset($options['tracyDebugger_text_email'])) {
         $options['tracyDebugger_text_email'] = '';
+        $changes = true;
+    }
+    if (!isset($options['tracyDebugger_text_emailSnooze'])) {
+        $options['tracyDebugger_text_emailSnooze'] = '2 days';
+        $changes = true;
+    }
+    if (!isset($options['tracyDebugger_text_fromEmail'])) {
+        $options['tracyDebugger_text_fromEmail'] = '';
+        $changes = true;
+    }
+    if (!isset($options['tracyDebugger_text_editor'])) {
+        $options['tracyDebugger_text_editor'] = Debugger::$editor;
+        $changes = true;
+    }
+    if (!isset($options['tracyDebugger_text_browser'])) {
+        $options['tracyDebugger_text_browser'] = '';
+        $changes = true;
+    }
+    if (!isset($options['tracyDebugger_text_errorTemplate'])) {
+        $options['tracyDebugger_text_errorTemplate'] = '';
         $changes = true;
     }
     if (!isset($options['tracyDebugger_text_maxDepth'])) {
@@ -64,8 +88,15 @@ if (function_exists('add_action')) {
     // Configure
     Debugger::$strictMode = ($options['tracyDebugger_checkbox_strictMode'] == 1);
     Debugger::$showBar = ($options['tracyDebugger_checkbox_showBar'] == 1);
+    Debugger::$scream = ($options['tracyDebugger_checkbox_scream'] == 1);
     if (strlen($options['tracyDebugger_text_email']) > 0) {
-        Debugger::$email = $options['tracyDebugger_text_email'];
+        Debugger::getLogger()->email = $options['tracyDebugger_text_email'];
+    }
+    if (strlen($options['tracyDebugger_text_emailSnooze']) > 0) {
+        Debugger::getLogger()->emailSnooze = $options['tracyDebugger_text_emailSnooze'];
+    }
+    if (strlen($options['tracyDebugger_text_fromEmail']) > 0) {
+        Debugger::getLogger()->fromEmail = $options['tracyDebugger_text_fromEmail'];
     }
     Debugger::$showLocation = ($options['tracyDebugger_checkbox_showLocation'] == 1);
     if (strlen($options['tracyDebugger_text_maxDepth']) > 0) {
@@ -73,6 +104,18 @@ if (function_exists('add_action')) {
     }
     if (strlen($options['tracyDebugger_text_maxLength']) > 0) {
         Debugger::$maxLength = $options['tracyDebugger_text_maxLength'];
+    }
+    if (strlen($options['tracyDebugger_text_editor']) > 0) {
+        Debugger::$editor = $options['tracyDebugger_text_editor'];
+    }
+    if (strlen($options['tracyDebugger_text_browser']) > 0) {
+        Debugger::$browser = $options['tracyDebugger_text_browser'];
+    }
+    if (strlen($options['tracyDebugger_text_errorTemplate']) > 0) {
+        $errorTemplate = realpath(ABSPATH . $options['tracyDebugger_text_errorTemplate']);
+        if (is_file($errorTemplate)) {
+            Debugger::$errorTemplate = $errorTemplate;
+        }
     }
     if (strlen($options['tracyDebugger_text_logDirectory']) > 0) {
         $logDirectory = realpath(ABSPATH . $options['tracyDebugger_text_logDirectory']);
@@ -197,9 +240,30 @@ function tracyDebugger_settings_init()
         'tracyDebugger_pluginPage_section'
     );
     add_settings_field(
+        'tracyDebugger_checkbox_scream',
+        __('Disable the @ (shut-up) operator', 'tracyDebugger'),
+        'tracyDebugger_checkbox_scream_render',
+        'pluginPage',
+        'tracyDebugger_pluginPage_section'
+    );
+    add_settings_field(
         'tracyDebugger_text_email',
         __('E-mail', 'tracyDebugger'),
         'tracyDebugger_text_email_render',
+        'pluginPage',
+        'tracyDebugger_pluginPage_section'
+    );
+    add_settings_field(
+        'tracyDebugger_text_emailSnooze',
+        __('E-mail snooze', 'tracyDebugger'),
+        'tracyDebugger_text_emailSnooze_render',
+        'pluginPage',
+        'tracyDebugger_pluginPage_section'
+    );
+    add_settings_field(
+        'tracyDebugger_text_fromEmail',
+        __('From e-mail', 'tracyDebugger'),
+        'tracyDebugger_text_fromEmail_render',
         'pluginPage',
         'tracyDebugger_pluginPage_section'
     );
@@ -218,9 +282,30 @@ function tracyDebugger_settings_init()
         'tracyDebugger_pluginPage_section'
     );
     add_settings_field(
+        'tracyDebugger_text_editor',
+        __('Editor URI pattern', 'tracyDebugger'),
+        'tracyDebugger_text_editor_render',
+        'pluginPage',
+        'tracyDebugger_pluginPage_section'
+    );
+    add_settings_field(
+        'tracyDebugger_text_browser',
+        __('Browser open command', 'tracyDebugger'),
+        'tracyDebugger_text_browser_render',
+        'pluginPage',
+        'tracyDebugger_pluginPage_section'
+    );
+    add_settings_field(
         'tracyDebugger_checkbox_showLocation',
         __('Show file location', 'tracyDebugger'),
         'tracyDebugger_checkbox_showLocation_render',
+        'pluginPage',
+        'tracyDebugger_pluginPage_section'
+    );
+    add_settings_field(
+        'tracyDebugger_text_errorTemplate',
+        __('Error template file', 'tracyDebugger'),
+        'tracyDebugger_text_errorTemplate_render',
         'pluginPage',
         'tracyDebugger_pluginPage_section'
     );
@@ -268,6 +353,23 @@ function tracyDebugger_checkbox_showBar_render()
     <p class="description"><?php
         echo __(
             'The Debugger Bar is a floating panel. It is displayed in the bottom right corner of a page. You can move it using the mouse. It will remember its position after the page reloading.',
+            'tracyDebugger'
+        );
+        ?></p>
+    <?php
+}
+
+function tracyDebugger_checkbox_scream_render()
+{
+    $options = get_option('tracyDebugger_settings');
+    ?>
+    <input type='hidden' name='tracyDebugger_settings[tracyDebugger_checkbox_scream]' value='0'/>
+    <input type='checkbox'
+           name='tracyDebugger_settings[tracyDebugger_checkbox_scream]' <?php checked($options['tracyDebugger_checkbox_scream'],
+        1); ?> value='1'>
+    <p class="description"><?php
+        echo __(
+            'By disabling the @ (shut-up) operator notices and warnings are no longer hidden.',
             'tracyDebugger'
         );
         ?></p>
@@ -323,6 +425,36 @@ function tracyDebugger_text_email_render()
     <?php
 }
 
+function tracyDebugger_text_fromEmail_render()
+{
+    $options = get_option('tracyDebugger_settings');
+    ?>
+    <input type='text' name='tracyDebugger_settings[tracyDebugger_text_fromEmail]'
+           value='<?php echo $options['tracyDebugger_text_fromEmail']; ?>'>
+    <p class="description"><?php
+        echo __(
+            'Sender of email notifications.',
+            'tracyDebugger'
+        );
+        ?></p>
+    <?php
+}
+
+function tracyDebugger_text_emailSnooze_render()
+{
+    $options = get_option('tracyDebugger_settings');
+    ?>
+    <input type='text' name='tracyDebugger_settings[tracyDebugger_text_emailSnooze]'
+           value='<?php echo $options['tracyDebugger_text_emailSnooze']; ?>'>
+    <p class="description"><?php
+        echo __(
+            'Interval for sending email. Refer to <a href="http://php.net/manual/en/function.strtotime.php" target="_blank">strtotime</a> for valid values.',
+            'tracyDebugger'
+        );
+        ?></p>
+    <?php
+}
+
 function tracyDebugger_text_maxDepth_render()
 {
     $options = get_option('tracyDebugger_settings');
@@ -347,6 +479,36 @@ function tracyDebugger_text_maxLength_render()
     <p class="description"><?php
         echo __(
             'For variable dumping, you can change the displayed strings length. Naturally, lower values accelerate Tracy rendering.',
+            'tracyDebugger'
+        );
+        ?></p>
+    <?php
+}
+
+function tracyDebugger_text_editor_render()
+{
+    $options = get_option('tracyDebugger_settings');
+    ?>
+    <input type='text' name='tracyDebugger_settings[tracyDebugger_text_editor]'
+           value='<?php echo $options['tracyDebugger_text_editor']; ?>'>
+    <p class="description"><?php
+        echo __(
+            'URI pattern mask to open editor.',
+            'tracyDebugger'
+        );
+        ?></p>
+    <?php
+}
+
+function tracyDebugger_text_browser_render()
+{
+    $options = get_option('tracyDebugger_settings');
+    ?>
+    <input type='text' name='tracyDebugger_settings[tracyDebugger_text_browser]'
+           value='<?php echo $options['tracyDebugger_text_browser']; ?>'>
+    <p class="description"><?php
+        echo __(
+            'command to open browser (use <code>start ""</code> in Windows)',
             'tracyDebugger'
         );
         ?></p>
@@ -383,6 +545,41 @@ function tracyDebugger_text_logDirectory_render()
             }
         } else {
             echo '-';
+        }
+        ?></p>
+    <?php
+}
+
+function tracyDebugger_text_errorTemplate_render()
+{
+    $options = get_option('tracyDebugger_settings');
+    ?>
+    <input type='text' name='tracyDebugger_settings[tracyDebugger_text_errorTemplate]'
+           value='<?php echo $options['tracyDebugger_text_errorTemplate']; ?>'>
+    <p class="description"><?php
+        echo __(
+            'Path to custom static error template file.',
+            'tracyDebugger'
+        );
+        ?></p>
+    <p class="description"><?php
+        echo __(
+            'Current location',
+            'tracyDebugger'
+        );
+        ?>: <?php
+        if (strlen($options['tracyDebugger_text_errorTemplate']) > 0) {
+            $errorTemplate = realpath(ABSPATH . $options['tracyDebugger_text_errorTemplate']);
+            if (is_file($errorTemplate)) {
+                echo '<code>' . $errorTemplate . '</code>';
+            } else {
+                echo '<code>' . ABSPATH . $options['tracyDebugger_text_errorTemplate'] . '</code> (' . __(
+                        'does not exist!',
+                        'tracyDebugger'
+                    ) . ')';
+            }
+        } else {
+            echo '<code>' . '{tracyPackageRoot}/assets/Debugger/error.500.phtml' . '</code>';
         }
         ?></p>
     <?php
