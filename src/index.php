@@ -9,6 +9,10 @@ if (function_exists('add_action')) {
     // Default options
     $options = get_option('tracyDebugger_settings');
     $changes = false;
+    if (!isset($options['tracyDebugger_checkbox_disableForGuests'])) {
+        $options['tracyDebugger_checkbox_disableForGuests'] = 1;
+        $changes = true;
+    }
     if (!isset($options['tracyDebugger_checkbox_strictMode'])) {
         $options['tracyDebugger_checkbox_strictMode'] = 0;
         $changes = true;
@@ -107,14 +111,20 @@ function wp_tracy_init_action()
     if (defined("DOING_AJAX") && DOING_AJAX) {
         return; // for IE compatibility WordPress media upload
     }
-    if (defined("WP_TRACY_CHECK_USER_LOGGED_IN") && WP_TRACY_CHECK_USER_LOGGED_IN && is_user_logged_in()) {
+    $options = get_option('tracyDebugger_settings');
+    if (
+        (
+            $options['tracyDebugger_checkbox_disableForGuests'] == 1 ||
+            (defined("WP_TRACY_CHECK_USER_LOGGED_IN") && WP_TRACY_CHECK_USER_LOGGED_IN)
+        ) &&
+        !is_user_logged_in()
+    ) {
         return; // cancel for anonymous users
     }
     Debugger::enable(defined("WP_TRACY_ENABLE_MODE") ? WP_TRACY_ENABLE_MODE :
         null); // hooray, enabling debugging using Tracy
     // panels in the correct order
     $defaultPanels = [];
-    $options = get_option('tracyDebugger_settings');
     if (tracyDebugger_isPanelSelected('WpPanel', $options)) {
         $defaultPanels[] = "WpTracy\\WpPanel";
     }
@@ -164,6 +174,13 @@ function tracyDebugger_settings_init()
         __('Configuration', 'tracyDebugger'),
         'tracyDebugger_settings_section_callback',
         'pluginPage'
+    );
+    add_settings_field(
+        'tracyDebugger_checkbox_disableForGuests',
+        __('Disable for guests', 'tracyDebugger'),
+        'tracyDebugger_checkbox_disableForGuests_render',
+        'pluginPage',
+        'tracyDebugger_pluginPage_section'
     );
     add_settings_field(
         'tracyDebugger_checkbox_showBar',
@@ -221,6 +238,23 @@ function tracyDebugger_settings_init()
         'pluginPage',
         'tracyDebugger_pluginPage_section'
     );
+}
+
+function tracyDebugger_checkbox_disableForGuests_render()
+{
+    $options = get_option('tracyDebugger_settings');
+    ?>
+    <input type='hidden' name='tracyDebugger_settings[tracyDebugger_checkbox_disableForGuests]' value='0' />
+    <input type='checkbox'
+           name='tracyDebugger_settings[tracyDebugger_checkbox_disableForGuests]' <?php checked($options['tracyDebugger_checkbox_disableForGuests'],
+        1); ?> value='1'>
+    <p class="description"><?php
+        echo __(
+            'Disables Debugger for unauthorised users.',
+            'tracyDebugger'
+        );
+        ?></p>
+    <?php
 }
 
 function tracyDebugger_checkbox_showBar_render()
