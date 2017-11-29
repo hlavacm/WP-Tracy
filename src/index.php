@@ -49,6 +49,10 @@ if (function_exists('add_action')) {
         $options['tracyDebugger_text_errorTemplate'] = '';
         $changes = true;
     }
+    if (!isset($options['tracyDebugger_select_logSeverity'])) {
+        $options['tracyDebugger_select_logSeverity'] = [];
+        $changes = true;
+    }
     if (!isset($options['tracyDebugger_text_maxDepth'])) {
         $options['tracyDebugger_text_maxDepth'] = 3;
         $changes = true;
@@ -168,33 +172,57 @@ function wp_tracy_init_action()
     }
     Debugger::enable(defined("WP_TRACY_ENABLE_MODE") ? WP_TRACY_ENABLE_MODE :
         null); // hooray, enabling debugging using Tracy
+
     // panels in the correct order
-    $defaultPanels = [];
-    if (tracyDebugger_isPanelSelected('WpPanel', $options)) {
-        $defaultPanels[] = "WpTracy\\WpPanel";
+    if (is_array($options['tracyDebugger_select_enabledPanels'])) {
+        $defaultPanels = [];
+        if (tracyDebugger_isPanelSelected('WpPanel', $options)) {
+            $defaultPanels[] = "WpTracy\\WpPanel";
+        }
+        if (tracyDebugger_isPanelSelected('WpUserPanel', $options)) {
+            $defaultPanels[] = "WpTracy\\WpUserPanel";
+        }
+        if (tracyDebugger_isPanelSelected('WpPostPanel', $options)) {
+            $defaultPanels[] = "WpTracy\\WpPostPanel";
+        }
+        if (tracyDebugger_isPanelSelected('WpQueryPanel', $options)) {
+            $defaultPanels[] = "WpTracy\\WpQueryPanel";
+        }
+        if (tracyDebugger_isPanelSelected('WpQueriedObjectPanel', $options)) {
+            $defaultPanels[] = "WpTracy\\WpQueriedObjectPanel";
+        }
+        if (tracyDebugger_isPanelSelected('WpDbPanel', $options)) {
+            $defaultPanels[] = "WpTracy\\WpDbPanel";
+        }
+        if (tracyDebugger_isPanelSelected('WpRewritePanel', $options)) {
+            $defaultPanels[] = "WpTracy\\WpRewritePanel";
+        }
+        $panels = apply_filters("wp_tracy_panels_filter", $defaultPanels);
     }
-    if (tracyDebugger_isPanelSelected('WpUserPanel', $options)) {
-        $defaultPanels[] = "WpTracy\\WpUserPanel";
-    }
-    if (tracyDebugger_isPanelSelected('WpPostPanel', $options)) {
-        $defaultPanels[] = "WpTracy\\WpPostPanel";
-    }
-    if (tracyDebugger_isPanelSelected('WpQueryPanel', $options)) {
-        $defaultPanels[] = "WpTracy\\WpQueryPanel";
-    }
-    if (tracyDebugger_isPanelSelected('WpQueriedObjectPanel', $options)) {
-        $defaultPanels[] = "WpTracy\\WpQueriedObjectPanel";
-    }
-    if (tracyDebugger_isPanelSelected('WpDbPanel', $options)) {
-        $defaultPanels[] = "WpTracy\\WpDbPanel";
-    }
-    if (tracyDebugger_isPanelSelected('WpRewritePanel', $options)) {
-        $defaultPanels[] = "WpTracy\\WpRewritePanel";
-    }
-    $panels = apply_filters("wp_tracy_panels_filter", $defaultPanels);
+
     // panels registration
     foreach ($panels as $className) {
         Debugger::getBar()->addPanel(new $className);
+    }
+
+    // Log serverity
+    if (is_array($options['tracyDebugger_select_logSeverity'])) {
+        $logSeverity = 0;
+        if (tracyDebugger_isLogSeveritySelected('E_ERROR', $options)) {
+            $logSeverity = $logSeverity | E_ERROR;
+        }
+        if (tracyDebugger_isLogSeveritySelected('E_WARNING', $options)) {
+            $logSeverity = $logSeverity | E_WARNING;
+        }
+        if (tracyDebugger_isLogSeveritySelected('E_PARSE', $options)) {
+            $logSeverity = $logSeverity | E_PARSE;
+        }
+        if (tracyDebugger_isLogSeveritySelected('E_NOTICE', $options)) {
+            $logSeverity = $logSeverity | E_NOTICE;
+        }
+        if ($logSeverity > 0) {
+            Debugger::$logSeverity = $logSeverity;
+        }
     }
 }
 
@@ -315,6 +343,13 @@ function tracyDebugger_settings_init()
         'tracyDebugger_text_logDirectory',
         __('Log directory', 'tracyDebugger'),
         'tracyDebugger_text_logDirectory_render',
+        'pluginPage',
+        'tracyDebugger_pluginPage_section'
+    );
+    add_settings_field(
+        'tracyDebugger_select_logSeverity',
+        __('Log severity', 'tracyDebugger'),
+        'tracyDebugger_select_logSeverity_render',
         'pluginPage',
         'tracyDebugger_pluginPage_section'
     );
@@ -638,6 +673,11 @@ function tracyDebugger_isPanelSelected($name, &$options)
     return in_array($name, $options['tracyDebugger_select_enabledPanels']);
 }
 
+function tracyDebugger_isLogSeveritySelected($name, &$options)
+{
+    return in_array($name, $options['tracyDebugger_select_logSeverity']);
+}
+
 function tracyDebugger_select_enabledPanels_render()
 {
     $options = get_option('tracyDebugger_settings');
@@ -663,6 +703,37 @@ function tracyDebugger_select_enabledPanels_render()
             'Use <kbd>Ctrl</kbd> or <kbd>Shift</kbd> to select multiple options or drag over with mouse.',
             'tracyDebugger'
         );
+        ?></p>
+    <?php
+}
+
+function tracyDebugger_select_logSeverity_render()
+{
+    $options = get_option('tracyDebugger_settings');
+    ?>
+    <select name="tracyDebugger_settings[tracyDebugger_select_logSeverity][]" size="4" multiple>
+        <option value="E_ERROR" <?php selected(tracyDebugger_isLogSeveritySelected('E_ERROR', $options),
+            true); ?>><?php echo __('Fatal run-time errors', 'tracyDebugger') ?></option>
+        <option value="E_WARNING" <?php selected(tracyDebugger_isLogSeveritySelected('E_WARNING', $options),
+            true); ?>><?php echo __('Run-time warnings (non-fatal errors)', 'tracyDebugger') ?></option>
+        <option value="E_PARSE" <?php selected(tracyDebugger_isLogSeveritySelected('E_PARSE', $options),
+            true); ?>><?php echo __('Compile-time parse errors', 'tracyDebugger') ?></option>
+        <option value="E_NOTICE" <?php selected(tracyDebugger_isLogSeveritySelected('E_NOTICE', $options),
+            true); ?>><?php echo __('Run-time notices', 'tracyDebugger') ?></option>
+    </select>
+    <p class="description"><?php
+        echo __(
+            'Select which PHP errors you want Tracy to log with detailed information (HTML report).',
+            'tracyDebugger'
+        );
+        ?></p>
+    <p class="description"><?php
+        echo __(
+            'Current value',
+            'tracyDebugger'
+        );
+        ?>: <?php
+        echo '<code>' . Debugger::$logSeverity . '</code>';
         ?></p>
     <?php
 }
