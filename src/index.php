@@ -42,7 +42,15 @@ if (function_exists('add_action')) {
         $changes = true;
     }
     if (!isset($options['tracyDebugger_select_enabledPanels'])) {
-        $options['tracyDebugger_select_enabledPanels'] = '';
+        $options['tracyDebugger_select_enabledPanels'] = [
+            'WpPanel',
+            'WpUserPanel',
+            'WpPostPanel',
+            'WpQueryPanel',
+            'WpQueriedObjectPanel',
+            'WpDbPanel',
+            'WpRewritePanel',
+        ];
         $changes = true;
     }
     if ($changes) {
@@ -208,7 +216,7 @@ function tracyDebugger_settings_init()
     );
     add_settings_field(
         'tracyDebugger_select_enabledPanels',
-        __('Enabled panels', 'tracyDebugger'),
+        __('Additional Wordpress panels', 'tracyDebugger'),
         'tracyDebugger_select_enabledPanels_render',
         'pluginPage',
         'tracyDebugger_pluginPage_section'
@@ -378,6 +386,12 @@ function tracyDebugger_select_enabledPanels_render()
         <option value="WpDbPanel" <?php selected(tracyDebugger_isPanelSelected('WpDbPanel', $options), true); ?>><?php echo __('DB', 'tracyDebugger') ?></option>
         <option value="WpRewritePanel" <?php selected(tracyDebugger_isPanelSelected('WpRewritePanel', $options), true); ?>><?php echo __('Rewrite', 'tracyDebugger') ?></option>
     </select>
+    <p class="description"><?php
+        echo __(
+            'Use <kbd>Ctrl</kbd> or <kbd>Shift</kbd> to select multiple options or drag over with mouse.',
+            'tracyDebugger'
+        );
+        ?></p>
     <?php
 }
 
