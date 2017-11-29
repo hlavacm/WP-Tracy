@@ -41,6 +41,10 @@ if (function_exists('add_action')) {
         $options['tracyDebugger_select_debuggerMode'] = '1';
         $changes = true;
     }
+    if (!isset($options['tracyDebugger_select_enabledPanels'])) {
+        $options['tracyDebugger_select_enabledPanels'] = '';
+        $changes = true;
+    }
     if ($changes) {
         update_option('tracyDebugger_settings', $options);
     }
@@ -101,15 +105,29 @@ function wp_tracy_init_action()
     Debugger::enable(defined("WP_TRACY_ENABLE_MODE") ? WP_TRACY_ENABLE_MODE :
         null); // hooray, enabling debugging using Tracy
     // panels in the correct order
-    $defaultPanels = [
-        "WpTracy\\WpPanel",
-        "WpTracy\\WpUserPanel",
-        "WpTracy\\WpPostPanel",
-        "WpTracy\\WpQueryPanel",
-        "WpTracy\\WpQueriedObjectPanel",
-        "WpTracy\\WpDbPanel",
-        "WpTracy\\WpRewritePanel",
-    ];
+    $defaultPanels = [];
+    $options = get_option('tracyDebugger_settings');
+    if (tracyDebugger_isPanelSelected('WpPanel', $options)) {
+        $defaultPanels[] = "WpTracy\\WpPanel";
+    }
+    if (tracyDebugger_isPanelSelected('WpUserPanel', $options)) {
+        $defaultPanels[] = "WpTracy\\WpUserPanel";
+    }
+    if (tracyDebugger_isPanelSelected('WpPostPanel', $options)) {
+        $defaultPanels[] = "WpTracy\\WpPostPanel";
+    }
+    if (tracyDebugger_isPanelSelected('WpQueryPanel', $options)) {
+        $defaultPanels[] = "WpTracy\\WpQueryPanel";
+    }
+    if (tracyDebugger_isPanelSelected('WpQueriedObjectPanel', $options)) {
+        $defaultPanels[] = "WpTracy\\WpQueriedObjectPanel";
+    }
+    if (tracyDebugger_isPanelSelected('WpDbPanel', $options)) {
+        $defaultPanels[] = "WpTracy\\WpDbPanel";
+    }
+    if (tracyDebugger_isPanelSelected('WpRewritePanel', $options)) {
+        $defaultPanels[] = "WpTracy\\WpRewritePanel";
+    }
     $panels = apply_filters("wp_tracy_panels_filter", $defaultPanels);
     // panels registration
     foreach ($panels as $className) {
@@ -185,6 +203,13 @@ function tracyDebugger_settings_init()
         'tracyDebugger_text_logDirectory',
         __('Log directory', 'tracyDebugger'),
         'tracyDebugger_text_logDirectory_render',
+        'pluginPage',
+        'tracyDebugger_pluginPage_section'
+    );
+    add_settings_field(
+        'tracyDebugger_select_enabledPanels',
+        __('Enabled panels', 'tracyDebugger'),
+        'tracyDebugger_select_enabledPanels_render',
         'pluginPage',
         'tracyDebugger_pluginPage_section'
     );
@@ -335,6 +360,27 @@ function tracyDebugger_select_debuggerMode_render()
     <?php
 }
 
+function tracyDebugger_isPanelSelected($name, &$options)
+{
+    return in_array($name, $options['tracyDebugger_select_enabledPanels']);
+}
+
+function tracyDebugger_select_enabledPanels_render()
+{
+    $options = get_option('tracyDebugger_settings');
+    ?>
+    <select name="tracyDebugger_settings[tracyDebugger_select_enabledPanels][]" size="7" multiple>
+        <option value="WpPanel" <?php selected(tracyDebugger_isPanelSelected('WpPanel', $options), true); ?>><?php echo __('WP', 'tracyDebugger') ?></option>
+        <option value="WpUserPanel" <?php selected(tracyDebugger_isPanelSelected('WpUserPanel', $options), true); ?>><?php echo __('User', 'tracyDebugger') ?></option>
+        <option value="WpPostPanel" <?php selected(tracyDebugger_isPanelSelected('WpPostPanel', $options), true); ?>><?php echo __('Post', 'tracyDebugger') ?></option>
+        <option value="WpQueryPanel" <?php selected(tracyDebugger_isPanelSelected('WpQueryPanel', $options), true); ?>><?php echo __('Query', 'tracyDebugger') ?></option>
+        <option value="WpQueriedObjectPanel" <?php selected(tracyDebugger_isPanelSelected('WpQueriedObjectPanel', $options), true); ?>><?php echo __('Queried object', 'tracyDebugger') ?></option>
+        <option value="WpDbPanel" <?php selected(tracyDebugger_isPanelSelected('WpDbPanel', $options), true); ?>><?php echo __('DB', 'tracyDebugger') ?></option>
+        <option value="WpRewritePanel" <?php selected(tracyDebugger_isPanelSelected('WpRewritePanel', $options), true); ?>><?php echo __('Rewrite', 'tracyDebugger') ?></option>
+    </select>
+    <?php
+}
+
 function tracyDebugger_settings_section_callback()
 {
     echo __(
@@ -347,7 +393,7 @@ function tracyDebugger_options_page()
 {
     ?>
     <form action='options.php' method='post'>
-        <h2>Tracy debugger</h2>
+        <h2><?php echo __('Tracy debugger', 'tracyDebugger') ?></h2>
         <?php
         settings_fields('pluginPage');
         do_settings_sections('pluginPage');
