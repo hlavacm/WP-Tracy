@@ -2,10 +2,10 @@
 use Tracy\Debugger;
 
 if (function_exists('add_action')) {
-    
+
     // Init tracy
     add_action("init", "wp_tracy_init_action", 1);
-    
+
     // Default options
     $options = get_option('tracyDebugger_settings');
     $changes = false;
@@ -60,7 +60,7 @@ if (function_exists('add_action')) {
     if ($changes) {
         update_option('tracyDebugger_settings', $options);
     }
-    
+
     // Configure
     Debugger::$strictMode = ($options['tracyDebugger_checkbox_strictMode'] == 1);
     Debugger::$showBar = ($options['tracyDebugger_checkbox_showBar'] == 1);
@@ -99,7 +99,7 @@ if (function_exists('add_action')) {
             define('WP_TRACY_ENABLE_MODE', Debugger::DETECT);
             break;
     }
-    
+
     // Settings page
     add_action('admin_menu', 'tracyDebugger_add_admin_menu');
     add_action('admin_init', 'tracyDebugger_settings_init');
@@ -244,7 +244,7 @@ function tracyDebugger_checkbox_disableForGuests_render()
 {
     $options = get_option('tracyDebugger_settings');
     ?>
-    <input type='hidden' name='tracyDebugger_settings[tracyDebugger_checkbox_disableForGuests]' value='0' />
+    <input type='hidden' name='tracyDebugger_settings[tracyDebugger_checkbox_disableForGuests]' value='0'/>
     <input type='checkbox'
            name='tracyDebugger_settings[tracyDebugger_checkbox_disableForGuests]' <?php checked($options['tracyDebugger_checkbox_disableForGuests'],
         1); ?> value='1'>
@@ -261,6 +261,7 @@ function tracyDebugger_checkbox_showBar_render()
 {
     $options = get_option('tracyDebugger_settings');
     ?>
+    <input type='hidden' name='tracyDebugger_settings[tracyDebugger_checkbox_showBar]' value='0'/>
     <input type='checkbox'
            name='tracyDebugger_settings[tracyDebugger_checkbox_showBar]' <?php checked($options['tracyDebugger_checkbox_showBar'],
         1); ?> value='1'>
@@ -277,6 +278,7 @@ function tracyDebugger_checkbox_strictMode_render()
 {
     $options = get_option('tracyDebugger_settings');
     ?>
+    <input type='hidden' name='tracyDebugger_settings[tracyDebugger_checkbox_strictMode]' value='0' />
     <input type='checkbox'
            name='tracyDebugger_settings[tracyDebugger_checkbox_strictMode]' <?php checked($options['tracyDebugger_checkbox_strictMode'],
         1); ?> value='1'>
@@ -293,6 +295,7 @@ function tracyDebugger_checkbox_showLocation_render()
 {
     $options = get_option('tracyDebugger_settings');
     ?>
+    <input type='hidden' name='tracyDebugger_settings[tracyDebugger_checkbox_showLocation]' value='0' />
     <input type='checkbox'
            name='tracyDebugger_settings[tracyDebugger_checkbox_showLocation]' <?php checked($options['tracyDebugger_checkbox_showLocation'],
         1); ?> value='1'>
@@ -368,20 +371,20 @@ function tracyDebugger_text_logDirectory_render()
             'tracyDebugger'
         );
         ?>: <?php
-            if (strlen($options['tracyDebugger_text_logDirectory']) > 0) {
-                $logDirectory = realpath(ABSPATH . $options['tracyDebugger_text_logDirectory']);
-                if (is_dir($logDirectory)) {
-                    echo '<code>' . $logDirectory . '</code>';
-                } else {
-                    echo '<code>' . ABSPATH . $options['tracyDebugger_text_logDirectory'] . '</code> (' . __(
+        if (strlen($options['tracyDebugger_text_logDirectory']) > 0) {
+            $logDirectory = realpath(ABSPATH . $options['tracyDebugger_text_logDirectory']);
+            if (is_dir($logDirectory)) {
+                echo '<code>' . $logDirectory . '</code>';
+            } else {
+                echo '<code>' . ABSPATH . $options['tracyDebugger_text_logDirectory'] . '</code> (' . __(
                         'does not exist!',
                         'tracyDebugger'
                     ) . ')';
-                }
-            } else {
-                echo '-';
             }
-            ?></p>
+        } else {
+            echo '-';
+        }
+        ?></p>
     <?php
 }
 
@@ -412,13 +415,20 @@ function tracyDebugger_select_enabledPanels_render()
     $options = get_option('tracyDebugger_settings');
     ?>
     <select name="tracyDebugger_settings[tracyDebugger_select_enabledPanels][]" size="7" multiple>
-        <option value="WpPanel" <?php selected(tracyDebugger_isPanelSelected('WpPanel', $options), true); ?>><?php echo __('WP', 'tracyDebugger') ?></option>
-        <option value="WpUserPanel" <?php selected(tracyDebugger_isPanelSelected('WpUserPanel', $options), true); ?>><?php echo __('User', 'tracyDebugger') ?></option>
-        <option value="WpPostPanel" <?php selected(tracyDebugger_isPanelSelected('WpPostPanel', $options), true); ?>><?php echo __('Post', 'tracyDebugger') ?></option>
-        <option value="WpQueryPanel" <?php selected(tracyDebugger_isPanelSelected('WpQueryPanel', $options), true); ?>><?php echo __('Query', 'tracyDebugger') ?></option>
-        <option value="WpQueriedObjectPanel" <?php selected(tracyDebugger_isPanelSelected('WpQueriedObjectPanel', $options), true); ?>><?php echo __('Queried object', 'tracyDebugger') ?></option>
-        <option value="WpDbPanel" <?php selected(tracyDebugger_isPanelSelected('WpDbPanel', $options), true); ?>><?php echo __('DB', 'tracyDebugger') ?></option>
-        <option value="WpRewritePanel" <?php selected(tracyDebugger_isPanelSelected('WpRewritePanel', $options), true); ?>><?php echo __('Rewrite', 'tracyDebugger') ?></option>
+        <option value="WpPanel" <?php selected(tracyDebugger_isPanelSelected('WpPanel', $options),
+            true); ?>><?php echo __('WP', 'tracyDebugger') ?></option>
+        <option value="WpUserPanel" <?php selected(tracyDebugger_isPanelSelected('WpUserPanel', $options),
+            true); ?>><?php echo __('User', 'tracyDebugger') ?></option>
+        <option value="WpPostPanel" <?php selected(tracyDebugger_isPanelSelected('WpPostPanel', $options),
+            true); ?>><?php echo __('Post', 'tracyDebugger') ?></option>
+        <option value="WpQueryPanel" <?php selected(tracyDebugger_isPanelSelected('WpQueryPanel', $options),
+            true); ?>><?php echo __('Query', 'tracyDebugger') ?></option>
+        <option value="WpQueriedObjectPanel" <?php selected(tracyDebugger_isPanelSelected('WpQueriedObjectPanel',
+            $options), true); ?>><?php echo __('Queried object', 'tracyDebugger') ?></option>
+        <option value="WpDbPanel" <?php selected(tracyDebugger_isPanelSelected('WpDbPanel', $options),
+            true); ?>><?php echo __('DB', 'tracyDebugger') ?></option>
+        <option value="WpRewritePanel" <?php selected(tracyDebugger_isPanelSelected('WpRewritePanel', $options),
+            true); ?>><?php echo __('Rewrite', 'tracyDebugger') ?></option>
     </select>
     <p class="description"><?php
         echo __(
