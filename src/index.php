@@ -93,7 +93,9 @@ if (function_exists('add_action')) {
         Debugger::getLogger()->email = $options['tracyDebugger_text_email'];
     }
     if (strlen($options['tracyDebugger_text_emailSnooze']) > 0) {
-        Debugger::getLogger()->emailSnooze = $options['tracyDebugger_text_emailSnooze'];
+        if (strtotime($options['tracyDebugger_text_emailSnooze']) !== false) {
+            Debugger::getLogger()->emailSnooze = $options['tracyDebugger_text_emailSnooze'];
+        }
     }
     if (strlen($options['tracyDebugger_text_fromEmail']) > 0) {
         Debugger::getLogger()->fromEmail = $options['tracyDebugger_text_fromEmail'];
@@ -452,6 +454,27 @@ function tracyDebugger_text_emailSnooze_render()
             'tracyDebugger'
         );
         ?></p>
+    <p class="description"><?php
+        echo __(
+            'Current value',
+            'tracyDebugger'
+        );
+        ?>: <?php
+        if (strlen($options['tracyDebugger_text_emailSnooze']) > 0) {
+            $emailSnooze = strtotime($options['tracyDebugger_text_emailSnooze']);
+            if ($emailSnooze === false) {
+                echo '<span style="color: red">' . __(
+                    'Invalid',
+                    'tracyDebugger'
+                ) . '</span>';
+            } else {
+                echo '<span style="color: green">' . __(
+                        'Valid',
+                        'tracyDebugger'
+                    ) . '</span>';
+            }
+        }
+        ?></p>
     <?php
 }
 
@@ -459,7 +482,7 @@ function tracyDebugger_text_maxDepth_render()
 {
     $options = get_option('tracyDebugger_settings');
     ?>
-    <input type='text' name='tracyDebugger_settings[tracyDebugger_text_maxDepth]'
+    <input type='number' name='tracyDebugger_settings[tracyDebugger_text_maxDepth]'
            value='<?php echo $options['tracyDebugger_text_maxDepth']; ?>'>
     <p class="description"><?php
         echo __(
@@ -474,7 +497,7 @@ function tracyDebugger_text_maxLength_render()
 {
     $options = get_option('tracyDebugger_settings');
     ?>
-    <input type='text' name='tracyDebugger_settings[tracyDebugger_text_maxLength]'
+    <input type='number' name='tracyDebugger_settings[tracyDebugger_text_maxLength]'
            value='<?php echo $options['tracyDebugger_text_maxLength']; ?>'>
     <p class="description"><?php
         echo __(
@@ -538,10 +561,14 @@ function tracyDebugger_text_logDirectory_render()
             if (is_dir($logDirectory)) {
                 echo '<code>' . $logDirectory . '</code>';
             } else {
-                echo '<code>' . ABSPATH . $options['tracyDebugger_text_logDirectory'] . '</code> (' . __(
+                echo '<code>' .
+                    ABSPATH . $options['tracyDebugger_text_logDirectory'] .
+                    '</code> (<span style="color: red">' .
+                    __(
                         'does not exist!',
                         'tracyDebugger'
-                    ) . ')';
+                    ) .
+                    '</span>)';
             }
         } else {
             echo '-';
@@ -573,10 +600,14 @@ function tracyDebugger_text_errorTemplate_render()
             if (is_file($errorTemplate)) {
                 echo '<code>' . $errorTemplate . '</code>';
             } else {
-                echo '<code>' . ABSPATH . $options['tracyDebugger_text_errorTemplate'] . '</code> (' . __(
+                echo '<code>' .
+                    ABSPATH . $options['tracyDebugger_text_errorTemplate'] .
+                    '</code> (<span style="color: red">' .
+                    __(
                         'does not exist!',
                         'tracyDebugger'
-                    ) . ')';
+                    ) .
+                    '</span>)';
             }
         } else {
             echo '<code>' . '{tracyPackageRoot}/assets/Debugger/error.500.phtml' . '</code>';
