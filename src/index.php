@@ -59,7 +59,10 @@ if (function_exists('add_action')) {
         Debugger::$maxLength = $options['tracyDebugger_text_maxLength'];
     }
     if (strlen($options['tracyDebugger_text_logDirectory']) > 0) {
-        Debugger::$logDirectory = __DIR__ . '/../../../../' . $options['tracyDebugger_text_logDirectory'];
+        $logDirectory = realpath(ABSPATH . $options['tracyDebugger_text_logDirectory']);
+        if (is_dir($logDirectory)) {
+            Debugger::$logDirectory = $logDirectory;
+        }
     }
     switch ($options['tracyDebugger_select_debuggerMode']) {
         case '1':
@@ -173,7 +176,7 @@ function tracyDebugger_settings_init()
     );
     add_settings_field(
         'tracyDebugger_checkbox_showLocation',
-        __('Show location', 'tracyDebugger'),
+        __('Show file location', 'tracyDebugger'),
         'tracyDebugger_checkbox_showLocation_render',
         'pluginPage',
         'tracyDebugger_pluginPage_section'
@@ -292,6 +295,26 @@ function tracyDebugger_text_logDirectory_render()
             'tracyDebugger'
         );
         ?></p>
+    <p class="description"><?php
+        echo __(
+            'Current location',
+            'tracyDebugger'
+        );
+        ?>: <?php
+            if (strlen($options['tracyDebugger_text_logDirectory']) > 0) {
+                $logDirectory = realpath(ABSPATH . $options['tracyDebugger_text_logDirectory']);
+                if (is_dir($logDirectory)) {
+                    echo '<code>' . $logDirectory . '</code>';
+                } else {
+                    echo '<code>' . ABSPATH . $options['tracyDebugger_text_logDirectory'] . '</code> (' . __(
+                        'does not exist!',
+                        'tracyDebugger'
+                    ) . ')';
+                }
+            } else {
+                echo '-';
+            }
+            ?></p>
     <?php
 }
 
