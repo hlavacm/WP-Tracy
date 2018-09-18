@@ -27,7 +27,9 @@ When it's activated, it automatically shows Tracy bar and displays within global
 6.4 `WpTracy\\WpQueryPanel`
 6.5 `WpTracy\\WpQueriedObjectPanel`
 6.6 `WpTracy\\WpDbPanel`
+6.7 `WpTracy\\WpRolesPanel`
 6.8 `WpTracy\\WpRewritePanel`
+6.9 `WpTracy\\WpCurrentScreenPanel`
 
 ![WP Tracy](https://hlavacm.github.io/images/wp-tracy.png "Tracy bar auto-display after plugin activation")
 ![WP Tracy exception](https://hlavacm.github.io/images/wp-tracy-exception.png "Tracy exception dialog when is occured")

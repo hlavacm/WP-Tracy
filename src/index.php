@@ -15,7 +15,9 @@ function wp_tracy_init_action()
         "WpTracy\\WpQueryPanel",
         "WpTracy\\WpQueriedObjectPanel",
         "WpTracy\\WpDbPanel",
+        "WpTracy\\WpRolesPanel",
         "WpTracy\\WpRewritePanel",
+        "WpTracy\\WpCurrentScreenPanel",
     ]; // in the correct order
 
     $defaultSettings = [
